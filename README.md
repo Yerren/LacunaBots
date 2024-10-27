@@ -6,7 +6,7 @@ Lacuna is a wonderfully tactile game, and it greatly benefits from the feel of i
 This implementation of Lacuna spits in the face of all of the above. So, if you have the chance to play the real board game yourself, it cannot be recommended enough.
 
 ## The Rules of The Game
-The rules of Lacuna can be found [here](https://drive.google.com/file/d/1YvaCmRYpXe0IMFNaYPqVYfQIytIa-hDK/view), or watched in [this 1-minute video](https://www.youtube.com/watch?v=c69xeb9GRDc).
+The rules of Lacuna can be read [here](https://drive.google.com/file/d/1YvaCmRYpXe0IMFNaYPqVYfQIytIa-hDK/view), or watched in [this 1-minute video](https://www.youtube.com/watch?v=c69xeb9GRDc).
 
 ## Lacuna Bots
 The purpose of this repo is not simply to destroy everything that makes Lacuna wonderful...
