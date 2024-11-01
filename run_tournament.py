@@ -13,7 +13,7 @@ Use left mouse button to progress through the game.
 from collections import defaultdict
 from itertools import combinations
 from run_game import *
-from bot_classes import RandomBot, MaxDistanceBot, MaxDistanceGreedyBot, MinDistanceWorstGreedyBot, Bot
+from bot_classes import *
 from typing import Dict
 import pandas as pd
 
@@ -44,6 +44,7 @@ def run_game(game_manager: 'GameManager', player1: Player, player2: Player) -> P
         result = game_manager.perform_game_step(wait_for_click=MANUAL_CLICK_THROUGH)
 
     return result["winner"]
+
 
 def run_match(game_manager: 'GameManager', bot1_name: str, bot1_class: 'Bot', bot2_name: str, bot2_class: 'Bot') -> str:
     """
