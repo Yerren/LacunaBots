@@ -22,6 +22,9 @@ class Bot(ABC):
 
 
 class RandomBot(Bot):
+    """
+    A bot that makes completely random moves.
+    """
     def make_move(self, game_manager: 'GameManager'):
         game_state, placed_player_tokens, game_pieces_captured_by_colour = game_manager.get_normalized_game_state()
 
@@ -47,6 +50,10 @@ class RandomBot(Bot):
 
 
 class MaxDistanceBot(Bot):
+    """
+    A bot that always chooses the two game pieces with the maximum distance between them, and then places its player
+    token in the center of that line.
+    """
     def __init__(self):
         self.random_bot = RandomBot()
 
@@ -80,6 +87,12 @@ class MaxDistanceBot(Bot):
 
 
 class MaxDistanceGreedyBot(Bot):
+    """
+    A bot which tries to collect pieces of the colour(s) that have the largest difference in captured pieces compared
+    to the other player (e.g., it tries to actively win as many colours as possible). It then chooses the two game
+    pieces of the selected colour with the maximum distance between them, and places its player token in the center of
+    that line.
+    """
     def __init__(self):
         self.random_bot = RandomBot()
 
@@ -134,11 +147,15 @@ class MaxDistanceGreedyBot(Bot):
 
 
 class MinDistanceWorstGreedyBot(Bot):
+    """
+    A bot that tries to be bad. It aims to collect pieces of the colour(s) that it has the lowest chance of winning.
+    It chooses the two game pieces of the selected colour with the minimum distance between them, and then places
+    its player token as close to one of those pieces as possible.
+    """
     def __init__(self):
         self.random_bot = RandomBot()
 
     def make_move(self, game_manager: 'GameManager'):
-
         game_state, placed_player_tokens, game_pieces_captured_by_colour = game_manager.get_normalized_game_state()
         current_player_index = game_manager.current_player_index
 
