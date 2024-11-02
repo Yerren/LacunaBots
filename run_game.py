@@ -9,12 +9,6 @@ import numpy as np
 
 
 def main() -> None:
-    """
-    Main game loop function.
-
-    Initializes the game window, sets up players, and runs the main game loop.
-    Players can be configured as either AI or Human players.
-    """
     pygame.init()
     random.seed(1)
     np.random.seed(1)
