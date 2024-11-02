@@ -6,7 +6,6 @@ from game_resources import *
 from bot_classes import *
 import random
 import numpy as np
-from bot_classes_yerren import MaxClosestPiecesBot
 
 
 def main() -> None:
