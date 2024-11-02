@@ -48,15 +48,16 @@ class Piece:
         self.closest_token = None
         self.closest_distance = float('inf')
 
-    def draw(self, screen: pygame.Surface) -> None:
+    def draw(self, screen: pygame.Surface, draw_closest_token_markers: bool) -> None:
         """
         Draw the piece on the screen.
 
         Args:
-            screen: Pygame surface to draw on
+            screen (pygame.Surface): Pygame surface to draw on
+            draw_closest_token_markers (bool): Whether to draw markers indicating the closest player token to this piece
         """
         pygame.draw.circle(screen, self.colour, (int(self.x), int(self.y)), self.radius)
-        if self.closest_token:
+        if draw_closest_token_markers and self.closest_token is not None:
             pygame.draw.circle(screen, self.closest_token.colour, (int(self.x), int(self.y)),
                                self.radius + 2, 2)
             pygame.draw.line(screen, self.closest_token.colour,
@@ -90,11 +91,13 @@ class PlayerToken:
         player_token_radius (int): Radius of the token in pixels
         player_token_border_width (int): Width of the token border in pixels
         radius (int): Total radius including border
+        player_index (int): The index of the player (relative to game_manager.players) who placed this token
     """
 
     def __init__(self, x: float, y: float, colour: Tuple[int, int, int],
                  player_token_border_colour: Tuple[int, int, int],
-                 player_token_radius: int, player_token_border_width: int):
+                 player_token_radius: int, player_token_border_width: int,
+                 player_index: int):
         """
         Initialize a new player token.
 
@@ -105,6 +108,7 @@ class PlayerToken:
             player_token_border_colour (Tuple[int, int, int]): RGB colour tuple for token border
             player_token_radius (int): Radius of the token in pixels
             player_token_border_width (int): Width of the token border in pixels
+            player_index (int): The index of the player (relative to game_manager.players) who placed this token
         """
         self.x = x
         self.y = y
@@ -113,6 +117,7 @@ class PlayerToken:
         self.player_token_border_width = player_token_border_width
         self.radius = self.player_token_radius + self.player_token_border_width
         self.colour = colour
+        self.player_index = player_index
 
     def draw(self, screen: pygame.Surface) -> None:
         """
@@ -164,6 +169,7 @@ class Player:
         tokens (List[PlayerToken]): List of all tokens owned by the player
         placed_tokens (List[PlayerToken]): List of tokens placed on the board
         collected_by_colour (Dict[int, int]): Count of collected pieces by colour
+        player_index (int): The index of this player (relative to game_manager.players)
         bot_class (Optional[object]): AI bot class for AI players
     """
 
@@ -197,6 +203,7 @@ class Player:
         self.tokens = []
         self.placed_tokens = []
         self.collected_by_colour = {i: 0 for i in range(self.num_colours)}
+        self.player_index = -1
         self.bot_class = bot_class
         self.reset_player()
 
@@ -222,7 +229,7 @@ class Player:
         self.placed_tokens = []
         self.collected_by_colour = {i: 0 for i in range(self.num_colours)}
         self.tokens = [PlayerToken(-100, -100, self.colour, self.player_token_border_colour, self.player_token_radius,
-                                   self.player_token_border_width) for _ in range(self.num_player_tokens)]
+                                   self.player_token_border_width, self.player_index) for _ in range(self.num_player_tokens)]
 
 
 class GameManager:
@@ -241,7 +248,7 @@ class GameManager:
         ai_token_position (Optional[Tuple[float, float]]): Position where AI will place token
     """
 
-    def __init__(self, num_colours: int = 7, num_pieces: int = 7, num_player_tokens: int = 7, display_game: bool = True) -> None:
+    def __init__(self, num_colours: int = 7, num_pieces: int = 7, num_player_tokens: int = 6, display_game: bool = True) -> None:
         """
         Initialize a new game state manager.
 
@@ -326,6 +333,8 @@ class GameManager:
         Args:
             players (List[Player]): List of Player objects
         """
+        for i, player in enumerate(players):
+            player.player_index = i
         self.players = players
 
     @property
@@ -441,20 +450,20 @@ class GameManager:
         if self.game_phase == "playing" and all(len(player.placed_tokens) == self.num_player_tokens for player in self.players):
             self.game_phase = "end_game"
 
-            # Set the closest player token for each piece
-            for piece in self.pieces:
-                piece.closest_distance = float('inf')
-                piece.closest_token = None
+        # Set the closest player token for each piece
+        for piece in self.pieces:
+            piece.closest_distance = float('inf')
+            piece.closest_token = None
 
-                for player in self.players:
-                    for token in player.placed_tokens:
-                        dx = piece.x - token.x
-                        dy = piece.y - token.y
-                        distance = math.sqrt(dx * dx + dy * dy)
+            for player in self.players:
+                for token in player.placed_tokens:
+                    dx = piece.x - token.x
+                    dy = piece.y - token.y
+                    distance = math.sqrt(dx * dx + dy * dy)
 
-                        if distance < piece.closest_distance:
-                            piece.closest_distance = distance
-                            piece.closest_token = token
+                    if distance < piece.closest_distance:
+                        piece.closest_distance = distance
+                        piece.closest_token = token
 
     def draw(self) -> None:
         """Draw the current game state to the screen, including board, pieces, tokens, and UI elements."""
@@ -468,7 +477,8 @@ class GameManager:
             self.draw_move_preview()
 
         for piece in self.pieces:
-            piece.draw(self.screen)
+            piece.draw(self.screen, True)
+            # piece.draw(self.screen, self.game_phase == "end_game")
             if piece in self.selected_pieces and self.current_player.player_type == PlayerType.HUMAN:
                 pygame.draw.circle(self.screen, self.piece_selection_border_colour,
                                    (int(piece.x), int(piece.y)), self.piece_radius + 2, 2)
@@ -492,7 +502,7 @@ class GameManager:
             preview_y = (self.ai_token_position[1] * 2 * self.board_radius) + (center_y - self.board_radius)
             preview_token = PlayerToken(preview_x, preview_y, self.current_player.colour,
                                         self.player_token_border_colour, self.player_token_radius,
-                                        self.player_token_border_width)
+                                        self.player_token_border_width, self.current_player_index)
             preview_token.draw(self.screen)
             for piece in self.ai_selected_pieces:
                 pygame.draw.circle(self.screen, self.piece_selection_border_colour,
@@ -518,7 +528,7 @@ class GameManager:
                     if self.check_token_placement(line_point[0], line_point[1], self.selected_pieces):
                         preview_token = PlayerToken(line_point[0], line_point[1], self.current_player.colour,
                                                     self.player_token_border_colour, self.player_token_radius,
-                                                    self.player_token_border_width)
+                                                    self.player_token_border_width, self.current_player_index)
                         preview_token.draw(self.screen)
 
     def collect_end_game_pieces(self) -> None:
@@ -552,10 +562,7 @@ class GameManager:
 
         # Convert normalized coordinates to screen coordinates if necessary
         if is_normalized:
-            center_x = self.window_size[0] // 2
-            center_y = self.window_size[1] // 2
-            screen_x = (position[0] * 2 * self.board_radius) + (center_x - self.board_radius)
-            screen_y = (position[1] * 2 * self.board_radius) + (center_y - self.board_radius)
+            screen_x, screen_y = self.unnormalize_coordinates(position)
         else:
             screen_x, screen_y = position
 
@@ -576,7 +583,7 @@ class GameManager:
         # Create and place the token
         new_token = PlayerToken(line_point[0], line_point[1], self.current_player.colour,
                                 self.player_token_border_colour, self.player_token_radius,
-                                self.player_token_border_width)
+                                self.player_token_border_width, self.current_player_index)
         self.current_player.placed_tokens.append(new_token)
 
         # Collect the selected pieces
@@ -586,6 +593,22 @@ class GameManager:
             self.current_player.collected_by_colour[piece.colour_index] += 1
 
         return True
+
+    def unnormalize_coordinates(self, position: Tuple[float, float]) -> Tuple[float, float]:
+        center_x = self.window_size[0] // 2
+        center_y = self.window_size[1] // 2
+        screen_x = (position[0] * 2 * self.board_radius) + (center_x - self.board_radius)
+        screen_y = (position[1] * 2 * self.board_radius) + (center_y - self.board_radius)
+
+        return screen_x, screen_y
+
+    def normalize_coordinates(self, position: Tuple[float, float]) -> Tuple[float, float]:
+        center_x = self.window_size[0] // 2
+        center_y = self.window_size[1] // 2
+        norm_x = (position[0] - (center_x - self.board_radius)) / (2 * self.board_radius)
+        norm_y = (position[1] - (center_y - self.board_radius)) / (2 * self.board_radius)
+        return norm_x, norm_y
+
 
     def draw_scoreboard(self) -> None:
         """
@@ -631,7 +654,7 @@ class GameManager:
             bool: True if the token can be placed, False otherwise
         """
         test_token = PlayerToken(x, y, (0, 0, 0), self.player_token_border_colour, self.player_token_radius,
-                                 self.player_token_border_width)  # colour doesn't matter for testing
+                                 self.player_token_border_width, self.current_player_index)  # colour doesn't matter for testing
 
         # Check overlap with existing pieces
         for piece in self.pieces:
@@ -689,9 +712,7 @@ class GameManager:
             # Fill coordinates array
             for i, piece in enumerate(colour_pieces):
                 # Normalize coordinates to [0, 1]
-                norm_x = (piece.x - (center_x - self.board_radius)) / (2 * self.board_radius)
-                norm_y = (piece.y - (center_y - self.board_radius)) / (2 * self.board_radius)
-                coordinates[i] = [norm_x, norm_y]
+                coordinates[i] = self.normalize_coordinates((piece.x, piece.y))
 
             # Fill connections array
             for i, piece1 in enumerate(colour_pieces):
@@ -816,12 +837,13 @@ class GameManager:
                 self.handle_click()
         return False
 
-    def get_valid_token_placements(self, selected_pieces: List[Piece]) -> List[Tuple[float, float]]:
+    def get_valid_token_placements(self, selected_pieces: List[Piece], resolution: int = 100) -> List[Tuple[float, float]]:
         """
         Returns a list of normalized coordinates where tokens can be validly placed.
 
         Args:
             selected_pieces(List[Piece]): List of selected pieces to connect
+            resolution (int): The number of points along the line to sample
 
         Returns:
             List[Tuple[float, float]]: List of normalized (x,y) coordinates where tokens can be placed
@@ -837,19 +859,14 @@ class GameManager:
         dy = end.y - start.y
         # distance = math.sqrt(dx * dx + dy * dy)
 
-        center_x = self.window_size[0] // 2
-        center_y = self.window_size[1] // 2
-
         # Sample 101 points along the line
-        for t in np.linspace(0, 1, 101):
+        for t in np.linspace(0, 1, resolution):
             x = start.x + t * dx
             y = start.y + t * dy
 
             if self.check_token_placement(x, y, selected_pieces):
                 # Normalize coordinates
-                norm_x = (x - (center_x - self.board_radius)) / (2 * self.board_radius)
-                norm_y = (y - (center_y - self.board_radius)) / (2 * self.board_radius)
-                valid_placements.append((norm_x, norm_y))
+                valid_placements.append(self.normalize_coordinates((x, y)))
 
         return valid_placements
 

@@ -12,13 +12,13 @@ Use left mouse button to progress through the game.
 
 from collections import defaultdict
 from itertools import combinations
-from run_game import *
+from game_resources import *
 from bot_classes import *
 from typing import Dict
 import pandas as pd
 
 
-NUM_MATCHES = 5
+NUM_MATCHES = 20
 DRAW_GAME = False
 MANUAL_CLICK_THROUGH = True
 
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         "Random Bot": RandomBot(),
         "Max Distance Bot": MaxDistanceBot(),
         "Greedy Max Distance Bot": MaxDistanceGreedyBot(),
-        "Worst Greedy Min Distance Bot": MinDistanceWorstGreedyBot()
+        "Worst Greedy Min Distance Bot": MinDistanceWorstGreedyBot(),
         # Add more bots here as needed
     }
 

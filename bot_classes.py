@@ -43,7 +43,7 @@ class RandomBot(Bot):
 
             selected_pieces = possible_moves[np.random.choice(len(possible_moves))]
 
-            valid_placements = game_manager.get_valid_token_placements(selected_pieces)
+            valid_placements = game_manager.get_valid_token_placements(selected_pieces, resolution=100)
 
             if valid_placements:
                 return selected_pieces, valid_placements[np.random.choice(len(valid_placements))]
@@ -77,7 +77,7 @@ class MaxDistanceBot(Bot):
                             max_distance_comparator = distance_comparator
                             selected_pieces = [colour_pieces[index_i], colour_pieces[index_j]]
 
-        valid_placements = game_manager.get_valid_token_placements(selected_pieces)
+        valid_placements = game_manager.get_valid_token_placements(selected_pieces, resolution=11)
         if valid_placements:
             return selected_pieces, valid_placements[len(valid_placements) // 2]
         else:
@@ -137,7 +137,7 @@ class MaxDistanceGreedyBot(Bot):
                             selected_pieces = [colour_pieces[index_i], colour_pieces[index_j]]
 
             if selected_pieces:
-                valid_placements = game_manager.get_valid_token_placements(selected_pieces)
+                valid_placements = game_manager.get_valid_token_placements(selected_pieces, resolution=11)
                 if valid_placements:
                     return selected_pieces, valid_placements[len(valid_placements) // 2]
 
@@ -195,7 +195,7 @@ class MinDistanceWorstGreedyBot(Bot):
                         distance_comparator = (x2 - x1) ** 2 + (y2 - y1) ** 2  # Note: no sqrt because we are just comparing the distances.
                         if distance_comparator < max_distance_comparator:
                             selected_pieces_temp = [colour_pieces[index_i], colour_pieces[index_j]]
-                            valid_placements_temp = game_manager.get_valid_token_placements(selected_pieces_temp)
+                            valid_placements_temp = game_manager.get_valid_token_placements(selected_pieces_temp, resolution=11)
                             if valid_placements_temp:
                                 max_distance_comparator = distance_comparator
                                 selected_pieces = selected_pieces_temp.copy()
