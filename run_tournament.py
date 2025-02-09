@@ -18,7 +18,7 @@ from typing import Dict
 import pandas as pd
 
 
-NUM_MATCHES = 20
+NUM_MATCHES = 2
 DRAW_GAME = False
 MANUAL_CLICK_THROUGH = True
 

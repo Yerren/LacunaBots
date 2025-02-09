@@ -26,4 +26,24 @@ pip install -r requirements.txt
 match (if both players win one game each, the match is a draw).
 
 # Creating a Bot
-_Add details once we've settled on a good interface._
+Bots should be a subclass of the "Bot" class (in bot_classes.py). They must implement a make_move function that takes in a "GameManager" object.
+The make_move function should return a tuple (selected_pieces, token_position), where selected_pieces is a tuple containing references to the two selected pieces and token_position is the normalized position of where the player token should be placed.
+## Useful Functions / Attributes
+### GameManager.get_normalized_game_state()
+Returns most of the information that a bot will need to make its moves, including: which pieces have an unobstructed line between them, the normalized coordinates of all pieces, and references to the piece objects. These are all grouped by colour. Additionally, it returns the normalized positions of player tokens, and the current piece capture counts for each player.
+Refer to get_normalized_game_state()'s docstring for more details.
+
+### GameManager.get_valid_token_placements()
+Given (a list containing) two pieces, get_valid_token_placements() will return a list of normalized (x, y) coordinates of valid placements for a player token (on the line between the two given pieces). A "resolution" argument can also be supplied to set how many points along the line between the two pieces should be sampled.
+
+### GameManager.unnormalize_coordinates() / GameManager.normalize_coordinates()
+Convert between normalised and unnormalized (pixel space) coordinates.
+
+### GameManager.current_player_index
+Returns which player (0 or 1) is the current active player.
+
+### GameManager.num_colours
+Returns the number of different colours being used in the game (default of 7).
+
+### GameManager.num_pieces
+Returns the number of pieces of each colour that are being used in the game (default of 7).

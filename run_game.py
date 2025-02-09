@@ -6,6 +6,7 @@ from game_resources import *
 from bot_classes import *
 import random
 import numpy as np
+from bot_classes_yerren import *
 
 
 def main() -> None:
@@ -16,8 +17,8 @@ def main() -> None:
 
     player_colours = [(192, 192, 192), (255, 215, 0)]  # Silver and Gold
     players = [
-        game_manager.create_player(player_colours[0], "Player 1", PlayerType.AI, bot_class=RandomBot()),
-        game_manager.create_player(player_colours[1], "Player 2", PlayerType.AI, bot_class=MaxDistanceGreedyBot())
+        game_manager.create_player(player_colours[0], "Player 1", PlayerType.HUMAN),
+        game_manager.create_player(player_colours[1], "Player 2", PlayerType.AI, bot_class=RandomBot())
     ]
     # players = [
     #     game_manager.create_player(player_colours[0], "Player 1", PlayerType.HUMAN),

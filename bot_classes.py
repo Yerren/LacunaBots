@@ -1,6 +1,7 @@
 import numpy as np
-from abc import ABC
-from game_resources import GameManager
+from typing import List, Tuple, Dict, Optional, Union, Sequence
+from abc import ABC, abstractmethod
+from game_resources import GameManager, Piece
 import logging
 
 
@@ -8,11 +9,13 @@ class Bot(ABC):
     """
     Abstract class that defines the interface for a Lacuna bot.
     """
-    def make_move(self, game_manager: 'GameManager'):
+
+    @abstractmethod
+    def make_move(self, game_manager: 'GameManager') -> Tuple[Tuple[Piece, Piece], Tuple[float, float]]:
         """
         Implement this method to make the bot choose a move. It should return a tuple (selected_pieces, token_position),
-        where selected_pieces is a list containing the two selected pieces and token_position is the position of the
-        where the player token should be placed.
+        where selected_pieces is a tuple containing the two selected pieces and token_position is the normalized
+        position of the where the player token should be placed.
 
         Args:
             game_manager (GameManager): Current game state manager.
@@ -31,7 +34,7 @@ class RandomBot(Bot):
         valid_placements = []
         while not valid_placements:
             possible_moves = []
-            for colour_index, colour_state in game_state.items():
+            for colour_state in game_state:
                 connections = colour_state['connections']
                 # coordinates = colour_state['coordinates']
                 colour_pieces = colour_state['pieces']
@@ -46,7 +49,7 @@ class RandomBot(Bot):
             valid_placements = game_manager.get_valid_token_placements(selected_pieces, resolution=100)
 
             if valid_placements:
-                return selected_pieces, valid_placements[np.random.choice(len(valid_placements))]
+                return tuple(selected_pieces), valid_placements[np.random.choice(len(valid_placements))]
 
 
 class MaxDistanceBot(Bot):
@@ -61,7 +64,7 @@ class MaxDistanceBot(Bot):
         game_state, placed_player_tokens, game_pieces_captured_by_colour = game_manager.get_normalized_game_state()
 
         max_distance_comparator = -1
-        for colour_index, colour_state in game_state.items():
+        for colour_state in game_state:
             connections = colour_state['connections']
             coordinates = colour_state['coordinates']
             colour_pieces = colour_state['pieces']
@@ -79,7 +82,7 @@ class MaxDistanceBot(Bot):
 
         valid_placements = game_manager.get_valid_token_placements(selected_pieces, resolution=11)
         if valid_placements:
-            return selected_pieces, valid_placements[len(valid_placements) // 2]
+            return tuple(selected_pieces), valid_placements[len(valid_placements) // 2]
         else:
             # Fallback in case it returns no valid_placements somehow
             logging.info("MaxDistanceBot: Doing random move")
@@ -139,7 +142,7 @@ class MaxDistanceGreedyBot(Bot):
             if selected_pieces:
                 valid_placements = game_manager.get_valid_token_placements(selected_pieces, resolution=11)
                 if valid_placements:
-                    return selected_pieces, valid_placements[len(valid_placements) // 2]
+                    return tuple(selected_pieces), valid_placements[len(valid_placements) // 2]
 
         # Fallback in case it returns no valid_placements somehow
         logging.info("MaxDistanceGreedyBot: Doing random move")
@@ -202,7 +205,7 @@ class MinDistanceWorstGreedyBot(Bot):
                                 valid_placements = valid_placements_temp.copy()
 
             if valid_placements:
-                return selected_pieces, valid_placements[0]
+                return tuple(selected_pieces), valid_placements[0]
 
         # Fallback in case it returns no valid_placements somehow
         logging.info("MinDistanceWorstBot: Doing random move")

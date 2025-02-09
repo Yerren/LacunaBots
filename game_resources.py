@@ -477,8 +477,8 @@ class GameManager:
             self.draw_move_preview()
 
         for piece in self.pieces:
-            piece.draw(self.screen, True)
-            # piece.draw(self.screen, self.game_phase == "end_game")
+            # piece.draw(self.screen, True)
+            piece.draw(self.screen, self.game_phase == "end_game")
             if piece in self.selected_pieces and self.current_player.player_type == PlayerType.HUMAN:
                 pygame.draw.circle(self.screen, self.piece_selection_border_colour,
                                    (int(piece.x), int(piece.y)), self.piece_radius + 2, 2)
@@ -674,14 +674,13 @@ class GameManager:
 
         return True
 
-    def get_normalized_game_state(self) -> Tuple[Dict[int, Dict[str, Union[np.ndarray, List[Piece]]]], List[np.ndarray], List[Dict[int, int]]]:
+    def get_normalized_game_state(self) -> Tuple[List[Dict[str, Union[np.ndarray, List[Piece]]]], List[np.ndarray], List[Dict[int, int]]]:
         """
         Provides a normalized representation of the game state for AI agents.
 
         Returns:
             Tuple containing:
-                - Dictionary mapping colour indices to game state information. For each colour_index, the remaining
-                  num_pieces are indexed. The dictionary contains:
+                - A list, with one item for each colour of piece. Each item is a dictionary containing:
                     - connections: a numpy array of shape (num_pieces, num_pieces), the value indicates whether there is
                       an unobstructed line between pieces i and j.
                     - coordinates: a numpy array of shape (num_pieces, 2) containing normalised coordinates of the piece
@@ -699,7 +698,7 @@ class GameManager:
         center_x = self.window_size[0] // 2
         center_y = self.window_size[1] // 2
 
-        game_state = {}
+        game_state = []
 
         for colour_index, colour_pieces in pieces_by_colour.items():
             num_pieces = len(colour_pieces)
@@ -731,11 +730,11 @@ class GameManager:
                             # connections[i, j, 1] = dx / (2 * self.board_radius)
                             # connections[i, j, 2] = dy / (2 * self.board_radius)
 
-            game_state[colour_index] = {
+            game_state.append({
                 'connections': connections,
                 'coordinates': coordinates,
                 'pieces': piece_references
-            }
+            })
 
         placed_player_tokens = []
         captured_game_pieces = []
@@ -842,7 +841,7 @@ class GameManager:
         Returns a list of normalized coordinates where tokens can be validly placed.
 
         Args:
-            selected_pieces(List[Piece]): List of selected pieces to connect
+            selected_pieces(List[Piece]): List of two selected pieces to connect
             resolution (int): The number of points along the line to sample
 
         Returns:
