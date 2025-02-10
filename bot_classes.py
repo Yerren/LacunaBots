@@ -34,7 +34,7 @@ class RandomBot(Bot):
         valid_placements = []
         while not valid_placements:
             possible_moves = []
-            for colour_state in game_state:
+            for colour_index, colour_state in game_state.items():
                 connections = colour_state['connections']
                 # coordinates = colour_state['coordinates']
                 colour_pieces = colour_state['pieces']
@@ -64,7 +64,7 @@ class MaxDistanceBot(Bot):
         game_state, placed_player_tokens, game_pieces_captured_by_colour = game_manager.get_normalized_game_state()
 
         max_distance_comparator = -1
-        for colour_state in game_state:
+        for colour_index, colour_state in game_state.items():
             connections = colour_state['connections']
             coordinates = colour_state['coordinates']
             colour_pieces = colour_state['pieces']

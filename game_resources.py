@@ -305,7 +305,7 @@ class GameManager:
             self.screen = pygame.display.set_mode(self.window_size)
             pygame.display.set_caption("Lacuna")
 
-    def export_current_state(self) -> Tuple[List[Dict], List[Piece], int]:
+    def export_current_state(self) -> Tuple[List[Dict], List[Piece], int, str]:
         """
         Exports the current state of the game (locations of pieces, tokens, status of captures, etc.) in a form that can
         be loaded by import_state().
@@ -323,9 +323,9 @@ class GameManager:
              }
         ]
 
-        return player_details, self.pieces.copy(), self.current_player_index
+        return player_details, self.pieces.copy(), self.current_player_index, self.game_phase
 
-    def import_state(self, input_state: Tuple[List[Dict], List[Piece], int]) -> None:
+    def import_state(self, input_state: Tuple[List[Dict], List[Piece], int, str]) -> None:
         """
         Sets the current state of the game to provided input_state, which should be a tuple created by
         export_current_state().
@@ -333,7 +333,7 @@ class GameManager:
         Args:
             input_state: the tuple provided by export_current_state().
         """
-        player_details, pieces, self.current_player_index = input_state
+        player_details, pieces, self.current_player_index, game_phase = input_state
         self.pieces = pieces.copy()
 
         self.players[0].collected_pieces = player_details[0]["collected_pieces"].copy()
@@ -343,6 +343,7 @@ class GameManager:
         self.players[1].collected_pieces = player_details[1]["collected_pieces"].copy()
         self.players[1].placed_tokens = player_details[1]["placed_tokens"].copy()
         self.players[1].collected_by_colour = player_details[1]["collected_by_colour"].copy()
+        self.game_phase = game_phase
         self.update()
 
     def reset_and_setup_game(self) -> None:
@@ -476,6 +477,15 @@ class GameManager:
         self.ai_selected_pieces, self.ai_token_position = self.current_player.make_move(self)
         self.ai_move_ready = True
 
+    def manual_apply_move(self, selected_pieces: Tuple[Piece, Piece], token_position: Tuple[float, float]) -> None:
+        """Manually executes a move. Useful for implementing search trees."""
+        self.ai_selected_pieces = selected_pieces
+        self.ai_token_position = token_position
+        result = self.place_player_token(selected_pieces, token_position, is_normalized=True)
+        if result:
+            self.set_next_player()
+        self.update()
+
     def execute_ai_move(self) -> None:
         """Execute the stored AI move, and advance to the next player if successful."""
         result = self.place_player_token(self.ai_selected_pieces, self.ai_token_position, is_normalized=True)
@@ -583,7 +593,7 @@ class GameManager:
                         break
         self.pieces.clear()
 
-    def place_player_token(self, selected_pieces: List[Piece], position: Tuple[float, float], is_normalized: bool = False) -> bool:
+    def place_player_token(self, selected_pieces: Union[Tuple[Piece, Piece], List[Piece]], position: Tuple[float, float], is_normalized: bool = False) -> bool:
         """
         Attempts to place a player token based on selected pieces and position.
         Args:
@@ -714,13 +724,14 @@ class GameManager:
 
         return True
 
-    def get_normalized_game_state(self) -> Tuple[List[Dict[str, Union[np.ndarray, List[Piece]]]], List[np.ndarray], List[Dict[int, int]]]:
+    def get_normalized_game_state(self) -> Tuple[Dict[int, Dict[str, Union[np.ndarray, List[Piece]]]], List[np.ndarray], List[Dict[int, int]]]:
         """
         Provides a normalized representation of the game state for AI agents.
 
         Returns:
             Tuple containing:
-                - A list, with one item for each colour of piece. Each item is a dictionary containing:
+                - A dict, with one item for each colour of piece, keyed with their colour_index. Each item is a
+                dictionary containing:
                     - connections: a numpy array of shape (num_pieces, num_pieces), the value indicates whether there is
                       an unobstructed line between pieces i and j.
                     - coordinates: a numpy array of shape (num_pieces, 2) containing normalised coordinates of the piece
@@ -738,7 +749,7 @@ class GameManager:
         center_x = self.window_size[0] // 2
         center_y = self.window_size[1] // 2
 
-        game_state = []
+        game_state = {}
 
         for colour_index, colour_pieces in pieces_by_colour.items():
             num_pieces = len(colour_pieces)
@@ -770,11 +781,11 @@ class GameManager:
                             # connections[i, j, 1] = dx / (2 * self.board_radius)
                             # connections[i, j, 2] = dy / (2 * self.board_radius)
 
-            game_state.append({
+            game_state[colour_index] = {
                 'connections': connections,
                 'coordinates': coordinates,
                 'pieces': piece_references
-            })
+            }
 
         placed_player_tokens = []
         captured_game_pieces = []
@@ -840,16 +851,26 @@ class GameManager:
             "winner": None
         }
 
+    def count_collected_colour_wins(self) -> Tuple[int, int]:
+        """Counts the number of colours that each player has currently won."""
+        player1_collected = np.fromiter(self.players[0].collected_by_colour.values(), dtype=int)
+        player2_collected = np.fromiter(self.players[1].collected_by_colour.values(), dtype=int)
+
+        player_1_win_count = np.count_nonzero(player1_collected > self.num_pieces // 2)
+        player_2_win_count = np.count_nonzero(player2_collected > self.num_pieces // 2)
+
+        return player_1_win_count, player_2_win_count
+
+
     def determine_winner(self) -> Player:
         """Determine the winner of the game based on collected pieces.
 
         Returns:
             Player: The winning player
         """
-        player1_collected = np.fromiter(self.players[0].collected_by_colour.values(), dtype=int)
-        player2_collected = np.fromiter(self.players[1].collected_by_colour.values(), dtype=int)
+        player_1_win_count, player_2_win_count = self.count_collected_colour_wins()
 
-        if np.sum(player1_collected > player2_collected) > self.num_colours // 2:
+        if player_1_win_count > player_2_win_count:
             return self.players[0]
         else:
             return self.players[1]
