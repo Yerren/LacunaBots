@@ -305,6 +305,46 @@ class GameManager:
             self.screen = pygame.display.set_mode(self.window_size)
             pygame.display.set_caption("Lacuna")
 
+    def export_current_state(self) -> Tuple[List[Dict], List[Piece], int]:
+        """
+        Exports the current state of the game (locations of pieces, tokens, status of captures, etc.) in a form that can
+        be loaded by import_state().
+
+        Returns: a tuple containing the current state of the game.
+        """
+        player_details = [
+            {"collected_pieces": self.players[0].collected_pieces.copy(),
+             "placed_tokens": self.players[0].placed_tokens.copy(),
+             "collected_by_colour": self.players[0].collected_by_colour.copy(),
+             },
+            {"collected_pieces": self.players[1].collected_pieces.copy(),
+             "placed_tokens": self.players[1].placed_tokens.copy(),
+             "collected_by_colour": self.players[1].collected_by_colour.copy(),
+             }
+        ]
+
+        return player_details, self.pieces.copy(), self.current_player_index
+
+    def import_state(self, input_state: Tuple[List[Dict], List[Piece], int]) -> None:
+        """
+        Sets the current state of the game to provided input_state, which should be a tuple created by
+        export_current_state().
+
+        Args:
+            input_state: the tuple provided by export_current_state().
+        """
+        player_details, pieces, self.current_player_index = input_state
+        self.pieces = pieces.copy()
+
+        self.players[0].collected_pieces = player_details[0]["collected_pieces"].copy()
+        self.players[0].placed_tokens = player_details[0]["placed_tokens"].copy()
+        self.players[0].collected_by_colour = player_details[0]["collected_by_colour"].copy()
+
+        self.players[1].collected_pieces = player_details[1]["collected_pieces"].copy()
+        self.players[1].placed_tokens = player_details[1]["placed_tokens"].copy()
+        self.players[1].collected_by_colour = player_details[1]["collected_by_colour"].copy()
+        self.update()
+
     def reset_and_setup_game(self) -> None:
         """
         Reset the game state and set up a new game, including resetting players and randomly capturing an initial piece

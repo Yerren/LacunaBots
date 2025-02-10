@@ -208,5 +208,5 @@ class MinDistanceWorstGreedyBot(Bot):
                 return tuple(selected_pieces), valid_placements[0]
 
         # Fallback in case it returns no valid_placements somehow
-        logging.info("MinDistanceWorstBot: Doing random move")
+        logging.info(f"{self}: Doing random move")
         return self.random_bot.make_move(game_manager)
