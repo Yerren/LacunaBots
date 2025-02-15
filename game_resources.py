@@ -78,6 +78,9 @@ class Piece:
         distance = math.sqrt(dx * dx + dy * dy)
         return distance < 2 * self.radius
 
+    def __str__(self):
+        return f"{self.x:.2f}x_{self.y:.2f}y_{self.colour_index}c"
+
 
 class PlayerToken:
     """
@@ -144,6 +147,9 @@ class PlayerToken:
         dy = self.y - other_object.y
         distance = math.sqrt(dx * dx + dy * dy)
         return distance < (self.radius + other_object.radius)
+
+    def __str__(self):
+        return f"{self.x:.2f}x_{self.y:.2f}y_{self.player_index}p"
 
 
 class PlayerType(Enum):

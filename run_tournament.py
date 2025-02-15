@@ -12,13 +12,17 @@ Use left mouse button to progress through the game.
 
 from collections import defaultdict
 from itertools import combinations
+from turtledemo.penrose import start
+
 from game_resources import *
 from bot_classes import *
 from typing import Dict
 import pandas as pd
+from bot_classes_yerren import *
+import time
 
 
-NUM_MATCHES = 2
+NUM_MATCHES = 10
 DRAW_GAME = False
 MANUAL_CLICK_THROUGH = True
 
@@ -150,11 +154,16 @@ if __name__ == "__main__":
     if DRAW_GAME:
         pygame.init()
 
+
+    start_time = time.time()
     bots_dict = {
-        "Random Bot": RandomBot(),
-        "Max Distance Bot": MaxDistanceBot(),
-        "Greedy Max Distance Bot": MaxDistanceGreedyBot(),
-        "Worst Greedy Min Distance Bot": MinDistanceWorstGreedyBot(),
+        # "Random Bot": RandomBot(),
+        # "Max Distance Bot": MaxDistanceBot(),
+        # "Greedy Max Distance Bot": MaxDistanceGreedyBot(),
+        # "Worst Greedy Min Distance Bot": MinDistanceWorstGreedyBot(),
+        # "Max Closest Pieces Bot": MaxClosestPiecesBot(resolution=11),
+        "Minimax Deep": MinimaxBot(resolution=3, max_depth=3, order_moves=False, one_step_lookahead=True),
+        "Minimax Wide": MinimaxBot(resolution=7, max_depth=2, order_moves=False, one_step_lookahead=True),
         # Add more bots here as needed
     }
 
@@ -162,3 +171,8 @@ if __name__ == "__main__":
 
     tournament_results = run_tournament(game_manager_obj, bots_dict)
     display_results(tournament_results)
+
+    end_time = time.time()
+
+    total_time = end_time - start_time
+    print(f"Total time for tournament: {total_time}")
